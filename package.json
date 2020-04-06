@@ -1,0 +1,17 @@
+{
+  "name": "website1",
+  "version": "0.0.1",
+  "description": "aplha ver",
+  "main": "app.js",
+  "scripts": {
+    "test": "nodemon index.js"
+  },
+  "keywords": [
+    "express"
+  ],
+  "author": "abd aziz <abdulazizabdulnoor@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
