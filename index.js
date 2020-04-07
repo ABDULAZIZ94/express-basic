@@ -1,30 +1,81 @@
 var express = require('express');
+var bodyParser = require('body-parser');
+var multer = require('multer');
+var mongoose = require('mongoose');
+
+//stup moggodb conection
+mongoose.connect('mongodb://localhost:27017/mydb', {useNewUrlParser: true, useUnifiedTopology: true});
 var app = express();
+var upload = multer();
+
+//person schema
+var personSchema = mongoose.Schema({
+   name: String,
+   age: Number,
+   nationality: String
+});
+
+var Person = mongoose.model("Person", personSchema);
 
 var things = require('./things.js');
 
-app.get('/', (req, res) => {
-	res.send('hello world');
+
+//confugure ti use pug template engine
+app.set('view engine', 'pug');
+app.set('views', './views');
+
+// for parsing application/json
+app.use(bodyParser.json()); 
+
+// for parsing application/xwww-
+app.use(bodyParser.urlencoded({ extended: true })); 
+//form-urlencoded
+
+// for parsing multipart/form-data
+app.use(upload.array()); 
+app.use(express.static('public'));
+
+app.get('/form', function(req, res) {
+	res.render('form');
+});
+app.post('/form', (req, res) => {
+	console.log(req.body);
+	res.send("recieved your request!");
 });
 
-app.post('/hello', (req, res) => {
-	res.send("you just called the post method  at 'hello' ! \n");
+app.get('/person', function(req, res){
+   res.render('person');
 });
 
-app.all('/test' ,(req, res) => {
-	res.send("HTTP method does not have any effect on this route");
+app.post('/person', (req, res) =>{
+   var personInfo = req.body; //Get the parsed information
+   console.log(req.body);
+   //res.send("recieved your datas!");
+   if(!personInfo.name || !personInfo.age || !personInfo.nationality){
+      res.render('show_message', {
+         message: "Sorry, you provided worng info", type: "error"});
+   } else {
+      var newPerson = new Person({
+         name: personInfo.name,
+         age: personInfo.age,
+         nationality: personInfo.nationality
+      });
+		
+      newPerson.save(function(err, Person){
+         if(err)
+            res.render('show_message', {message: "Database error", type: "error"});
+         else
+            res.render('show_message', {
+               message: "New person added", type: "success", person: personInfo});
+      });
+   }
 });
 
-//dynamic route
-app.get('/:id', (req, res) => {
-	res.send('The id you specified is ' + req.params.id);
-});
 
-//complex dynamic route
-app.get('/:id/:name',(req, res) => {
-	res.send('my name is ' + req.params.name + ' and my id is ' + req.params.id);
+app.get('/findperson', (req, res) => {
+	Person.find((err, result)=> {
+		res.json(result);
+	});
 });
-
-app.use('/things', things);
 
 app.listen(3000);
